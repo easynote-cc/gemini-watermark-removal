@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday
 
 env:
   CARGO_TERM_COLOR: always
@@ -43,6 +45,22 @@ jobs:
 
       - name: Test (lib only, no CLI)
         run: cargo test --no-default-features --locked
+
+  msrv:
+    name: MSRV (1.70)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.70
+      - name: Check MSRV
+        run: cargo check --all-features
+
+  deny:
+    name: Cargo Deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
 
   doc:
     name: Documentation

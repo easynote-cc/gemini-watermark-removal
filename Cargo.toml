@@ -6,8 +6,12 @@ rust-version = "1.70"
 description = "Remove visible Gemini AI watermarks via reverse alpha blending"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/easynote-cc/gemini-watermark-removal"
+homepage = "https://github.com/easynote-cc/gemini-watermark-removal"
+documentation = "https://docs.rs/gemini-watermark-removal"
+readme = "README.md"
 keywords = ["gemini", "watermark", "image", "alpha-blending"]
 categories = ["multimedia::images", "command-line-utilities"]
+include = ["src/**/*", "LICENSE-*", "README.md", "CHANGELOG.md"]
 
 [lib]
 name = "gemini_watermark_removal"
@@ -27,6 +31,10 @@ image = "0.25"
 thiserror = "2"
 clap = { version = "4", features = ["derive"], optional = true }
 rayon = { version = "1.10", optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints.rust]
 future-incompatible = "warn"

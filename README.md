@@ -1,5 +1,11 @@
 # gemini-watermark-removal
 
+[![CI](https://github.com/easynote-cc/gemini-watermark-removal/actions/workflows/ci.yml/badge.svg)](https://github.com/easynote-cc/gemini-watermark-removal/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/gemini-watermark-removal.svg)](https://crates.io/crates/gemini-watermark-removal)
+[![docs.rs](https://docs.rs/gemini-watermark-removal/badge.svg)](https://docs.rs/gemini-watermark-removal)
+[![codecov](https://codecov.io/gh/easynote-cc/gemini-watermark-removal/graph/badge.svg)](https://codecov.io/gh/easynote-cc/gemini-watermark-removal)
+[![License](https://img.shields.io/crates/l/gemini-watermark-removal.svg)](https://github.com/easynote-cc/gemini-watermark-removal#license)
+
 Remove visible Gemini AI watermarks from images via reverse alpha blending.
 
 ## Overview
@@ -62,6 +68,14 @@ Detection uses a three-stage weighted ensemble:
 - Spatial NCC (50%) - pattern correlation with alpha map
 - Gradient NCC (30%) - edge signature matching
 - Variance Analysis (20%) - texture dampening detection
+
+## Minimum Supported Rust Version (MSRV)
+
+The minimum supported Rust version is **1.70**.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 

@@ -1,1 +1,24 @@
+# Rust build artifacts
 /target
+**/*.rs.bk
+
+# Cargo lock is committed for binaries, but listed here for reference
+# Cargo.lock
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Coverage artifacts
+lcov.info
+*.profraw
+*.profdata
+tarpaulin-report.html
+
+# OS files
+Thumbs.db
+Desktop.ini
