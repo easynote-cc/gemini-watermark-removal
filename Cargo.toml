@@ -1,0 +1,38 @@
+[package]
+name = "gemini-watermark-removal"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+description = "Remove visible Gemini AI watermarks via reverse alpha blending"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/AGISeek/gemini-watermark-removal"
+keywords = ["gemini", "watermark", "image", "alpha-blending"]
+categories = ["multimedia::images", "command-line-utilities"]
+
+[lib]
+name = "gemini_watermark_removal"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gemini-watermark"
+path = "src/bin/gemini-watermark.rs"
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+cli = ["dep:clap", "dep:rayon"]
+
+[dependencies]
+image = "0.25"
+thiserror = "2"
+clap = { version = "4", features = ["derive"], optional = true }
+rayon = { version = "1.10", optional = true }
+
+[lints.rust]
+future-incompatible = "warn"
+nonstandard_style = { level = "deny", priority = -1 }
+
+[lints.clippy]
+all = { level = "deny", priority = 10 }
+pedantic = { level = "warn", priority = 3 }
+redundant_clone = { level = "deny", priority = 9 }
