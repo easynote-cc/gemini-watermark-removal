@@ -2,10 +2,8 @@
 # https://embarkstudios.github.io/cargo-deny/
 
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "warn"
-notice = "warn"
+version = 2
+ignore = []
 
 [licenses]
 unlicensed = "deny"
