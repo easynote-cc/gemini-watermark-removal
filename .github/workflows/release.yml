@@ -134,16 +134,22 @@ jobs:
           Copy-Item LICENSE-MIT, LICENSE-APACHE, README.md staging/
           Compress-Archive -Path staging/* -DestinationPath "${{ env.BINARY_NAME }}-${{ matrix.target }}.zip"
 
-      - name: SHA256 checksum
+      - name: SHA256 checksum (unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            ARCHIVE="${{ env.BINARY_NAME }}-${{ matrix.target }}.zip"
-          else
-            ARCHIVE="${{ env.BINARY_NAME }}-${{ matrix.target }}.tar.gz"
-          fi
+          ARCHIVE="${{ env.BINARY_NAME }}-${{ matrix.target }}.tar.gz"
           shasum -a 256 "$ARCHIVE" > "$ARCHIVE.sha256"
           cat "$ARCHIVE.sha256"
+
+      - name: SHA256 checksum (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = "${{ env.BINARY_NAME }}-${{ matrix.target }}.zip"
+          $hash = (Get-FileHash -Algorithm SHA256 $archive).Hash.ToLower()
+          "$hash  $archive" | Out-File -Encoding ascii "$archive.sha256"
+          Get-Content "$archive.sha256"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
