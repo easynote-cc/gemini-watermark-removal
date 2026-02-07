@@ -2,7 +2,7 @@
 name = "gemini-watermark-removal"
 version = "0.1.1"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.85"
 description = "Remove visible Gemini AI watermarks via reverse alpha blending"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/easynote-cc/gemini-watermark-removal"

@@ -71,7 +71,7 @@ Detection uses a three-stage weighted ensemble:
 
 ## Minimum Supported Rust Version (MSRV)
 
-The minimum supported Rust version is **1.70**.
+The minimum supported Rust version is **1.85**.
 
 ## Contributing
 

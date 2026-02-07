@@ -47,11 +47,11 @@ jobs:
         run: cargo test --no-default-features --locked
 
   msrv:
-    name: MSRV (1.70)
+    name: MSRV (1.85)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.70
+      - uses: dtolnay/rust-toolchain@1.85
       - name: Check MSRV
         run: cargo check --all-features
 
