@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.70"
 description = "Remove visible Gemini AI watermarks via reverse alpha blending"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/AGISeek/gemini-watermark-removal"
+repository = "https://github.com/easynote-cc/gemini-watermark-removal"
 keywords = ["gemini", "watermark", "image", "alpha-blending"]
 categories = ["multimedia::images", "command-line-utilities"]
 
