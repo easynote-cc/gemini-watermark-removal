@@ -33,3 +33,26 @@ pub enum Error {
 
 /// A specialized `Result` type for this crate.
 pub type Result<T> = std::result::Result<T, Error>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_display_messages() {
+        let io_err = Error::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "gone"));
+        assert!(io_err.to_string().contains("gone"));
+
+        let unsupported = Error::UnsupportedFormat("tiff".to_string());
+        assert!(unsupported.to_string().contains("tiff"));
+
+        let too_small = Error::ImageTooSmall {
+            width: 10,
+            height: 20,
+            wm_size: 48,
+        };
+        let msg = too_small.to_string();
+        assert!(msg.contains("10x20"));
+        assert!(msg.contains("48x48"));
+    }
+}

@@ -280,6 +280,67 @@ mod tests {
     }
 
     #[test]
+    fn ncc_of_empty_slices_is_zero() {
+        let score = ncc(&[], &[]);
+        assert!(
+            score.abs() < 1e-6,
+            "NCC of empty slices should be 0, got {score}"
+        );
+    }
+
+    #[test]
+    fn stddev_of_empty_slice_is_zero() {
+        assert!(stddev(&[]).abs() < 1e-6);
+    }
+
+    #[test]
+    fn stddev_of_constant_values_is_zero() {
+        let data = vec![0.42; 100];
+        assert!(
+            stddev(&data).abs() < 1e-6,
+            "Constant values should have stddev 0"
+        );
+    }
+
+    #[test]
+    fn stddev_of_known_values() {
+        // stddev of [1, 2, 3, 4, 5] = sqrt(2.0) ≈ 1.4142
+        let data: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let sd = stddev(&data);
+        let expected = 2.0_f32.sqrt();
+        assert!(
+            (sd - expected).abs() < 1e-5,
+            "Expected stddev ~{expected}, got {sd}"
+        );
+    }
+
+    #[test]
+    fn detect_returns_result_for_small_image_with_clipping() {
+        // Image smaller than watermark region — should not panic, ROI gets clipped
+        let img = RgbImage::new(20, 20);
+        let alpha_map = vec![0.3; 48 * 48];
+        // Watermark 48x48 placed at (0,0) on a 20x20 image — heavy clipping
+        let result = detect_watermark(&img, &alpha_map, 48, 48, 0, 0, 0.25);
+        // Should run without panic, confidence should be low for blank image
+        assert!(!result.detected);
+    }
+
+    #[test]
+    fn detect_circuit_breaker_rejects_low_spatial() {
+        // Uniform image should have near-zero spatial NCC with any alpha pattern
+        let img = RgbImage::new(100, 100); // all black
+        #[allow(clippy::cast_precision_loss)]
+        let alpha_map: Vec<f32> = (0..48 * 48).map(|i| (i % 5) as f32 / 10.0).collect();
+
+        let result = detect_watermark(&img, &alpha_map, 48, 48, 20, 20, 0.25);
+
+        // Circuit breaker should trigger: gradient and variance stay 0
+        assert!(result.gradient_score.abs() < f32::EPSILON);
+        assert!(result.variance_score.abs() < f32::EPSILON);
+        assert!(!result.detected);
+    }
+
+    #[test]
     fn sobel_returns_zero_for_flat_image() {
         let data = vec![0.5_f32; 10 * 10];
         let grad = sobel_magnitude(&data, 10, 10);

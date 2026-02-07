@@ -133,6 +133,54 @@ mod tests {
     }
 
     #[test]
+    fn calculate_alpha_map_rejects_invalid_png() {
+        let result = calculate_alpha_map(&[0xFF, 0x00, 0x42]);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            matches!(err, crate::error::Error::AlphaMapDecode(_)),
+            "Expected AlphaMapDecode, got {err:?}"
+        );
+    }
+
+    #[test]
+    fn remove_watermark_skips_when_position_outside_bounds() {
+        let mut img = RgbImage::new(50, 50);
+        for px in img.pixels_mut() {
+            *px = image::Rgb([100, 100, 100]);
+        }
+        let before = img.clone();
+
+        let alpha_map = vec![0.5; 10 * 10];
+        // pos_x (60) >= img_w (50), so the early return triggers
+        remove_watermark_alpha_blend(&mut img, &alpha_map, 10, 10, 60, 60, 255.0);
+
+        assert_eq!(
+            img, before,
+            "Image should be unchanged when position is outside bounds"
+        );
+    }
+
+    #[test]
+    fn remove_watermark_clips_at_boundary() {
+        // Watermark extends past image edge — should not panic
+        let mut img = RgbImage::new(50, 50);
+        for px in img.pixels_mut() {
+            *px = image::Rgb([200, 150, 100]);
+        }
+
+        let wm_size = 20u32;
+        let alpha_map = vec![0.3; (wm_size * wm_size) as usize];
+        // Place at (40, 40) so watermark (20x20) extends to (60,60) but image is only 50x50
+        remove_watermark_alpha_blend(&mut img, &alpha_map, wm_size, wm_size, 40, 40, 255.0);
+
+        // Pixels inside the clipped region should have been modified
+        let px = img.get_pixel(45, 45);
+        let orig = image::Rgb([200, 150, 100]);
+        assert_ne!(*px, orig, "Pixels in watermark region should be modified");
+    }
+
+    #[test]
     fn reverse_blend_recovers_original_within_tolerance() {
         let mut original = RgbImage::new(100, 100);
         for px in original.pixels_mut() {

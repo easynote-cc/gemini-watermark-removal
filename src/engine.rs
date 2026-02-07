@@ -431,4 +431,186 @@ mod tests {
         assert!(!is_supported_image(Path::new("photo.txt")));
         assert!(!is_supported_image(Path::new("photo")));
     }
+
+    #[test]
+    fn default_output_path_handles_no_extension() {
+        let p = default_output_path(Path::new("myfile"));
+        assert_eq!(p.file_name().unwrap().to_str().unwrap(), "myfile_cleaned.");
+    }
+
+    #[test]
+    fn save_image_and_reload_png() {
+        let dir = std::env::temp_dir().join("gwr_test_save_png");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.png");
+
+        let mut img = RgbImage::new(10, 10);
+        for px in img.pixels_mut() {
+            *px = image::Rgb([42, 128, 200]);
+        }
+
+        save_image(&img, &path).unwrap();
+        let reloaded = image::open(&path).unwrap().to_rgb8();
+        assert_eq!(img, reloaded, "PNG roundtrip should be lossless");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn save_image_and_reload_jpeg() {
+        let dir = std::env::temp_dir().join("gwr_test_save_jpeg");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.jpg");
+
+        let img = RgbImage::new(10, 10);
+        save_image(&img, &path).unwrap();
+        assert!(path.exists(), "JPEG file should exist after save");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn save_image_rejects_unsupported_format() {
+        let dir = std::env::temp_dir().join("gwr_test_save_unsup");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.gif");
+
+        let img = RgbImage::new(10, 10);
+        let result = save_image(&img, &path);
+        assert!(result.is_err());
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Helper: create a small PNG test image in the given directory.
+    fn create_test_png(dir: &Path, name: &str, w: u32, h: u32) -> PathBuf {
+        let path = dir.join(name);
+        let img = RgbImage::new(w, h);
+        img.save(&path).unwrap();
+        path
+    }
+
+    #[test]
+    fn process_file_on_valid_image() {
+        let dir = std::env::temp_dir().join("gwr_test_pf_valid");
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let input = create_test_png(&dir, "input.png", 200, 200);
+        let output = dir.join("output.png");
+
+        let engine = WatermarkEngine::new().unwrap();
+        let opts = ProcessOptions {
+            force: true,
+            ..ProcessOptions::default()
+        };
+        let result = engine.process_file(&input, &output, &opts);
+
+        assert!(
+            result.success,
+            "process_file should succeed: {}",
+            result.message
+        );
+        assert!(!result.skipped);
+        assert!(output.exists(), "Output file should be created");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn process_file_skips_when_no_watermark() {
+        let dir = std::env::temp_dir().join("gwr_test_pf_skip");
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let input = create_test_png(&dir, "blank.png", 200, 200);
+        let output = dir.join("output.png");
+
+        let engine = WatermarkEngine::new().unwrap();
+        let opts = ProcessOptions::default();
+        let result = engine.process_file(&input, &output, &opts);
+
+        assert!(result.success);
+        assert!(
+            result.skipped,
+            "Blank image should be skipped (no watermark)"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn process_file_fails_on_nonexistent_input() {
+        let engine = WatermarkEngine::new().unwrap();
+        let opts = ProcessOptions::default();
+        let result = engine.process_file(
+            Path::new("/tmp/gwr_nonexistent_image.png"),
+            Path::new("/tmp/gwr_out.png"),
+            &opts,
+        );
+
+        assert!(!result.success, "Should fail on nonexistent input");
+        assert!(!result.message.is_empty());
+    }
+
+    #[test]
+    fn process_file_with_force_mode() {
+        let dir = std::env::temp_dir().join("gwr_test_pf_force");
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let input = create_test_png(&dir, "input.png", 200, 200);
+        let output = dir.join("forced_output.png");
+
+        let engine = WatermarkEngine::new().unwrap();
+        let opts = ProcessOptions {
+            force: true,
+            ..ProcessOptions::default()
+        };
+        let result = engine.process_file(&input, &output, &opts);
+
+        assert!(result.success);
+        assert!(!result.skipped, "Force mode should not skip");
+        assert!(output.exists());
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn process_directory_with_mixed_files() {
+        let dir = std::env::temp_dir().join("gwr_test_pd_mixed");
+        let out_dir = std::env::temp_dir().join("gwr_test_pd_mixed_out");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        // Create one PNG and one TXT
+        create_test_png(&dir, "photo.png", 200, 200);
+        std::fs::write(dir.join("notes.txt"), "not an image").unwrap();
+
+        let engine = WatermarkEngine::new().unwrap();
+        let opts = ProcessOptions {
+            force: true,
+            quiet: true,
+            ..ProcessOptions::default()
+        };
+        let results = engine.process_directory(&dir, &out_dir, &opts);
+
+        // Only the PNG should be processed
+        assert_eq!(results.len(), 1, "Should process only 1 image file");
+        assert!(results[0].success);
+
+        std::fs::remove_dir_all(&dir).ok();
+        std::fs::remove_dir_all(&out_dir).ok();
+    }
+
+    #[test]
+    fn process_directory_on_nonexistent_dir() {
+        let engine = WatermarkEngine::new().unwrap();
+        let opts = ProcessOptions::default();
+        let results = engine.process_directory(
+            Path::new("/tmp/gwr_no_such_dir_999"),
+            Path::new("/tmp/gwr_out_999"),
+            &opts,
+        );
+
+        assert_eq!(results.len(), 1);
+        assert!(!results[0].success, "Should fail for nonexistent directory");
+    }
 }
