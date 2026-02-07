@@ -3,7 +3,11 @@
 
 [advisories]
 version = 2
-ignore = []
+ignore = [
+    # paste is unmaintained (RUSTSEC-2024-0436), pulled in by rav1e via image.
+    # We cannot control this transitive dependency; will resolve when image updates rav1e.
+    "RUSTSEC-2024-0436",
+]
 
 [licenses]
 version = 2
@@ -13,6 +17,7 @@ allow = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
+    "NCSA",
     "Unicode-3.0",
     "Unicode-DFS-2016",
     "Zlib",
